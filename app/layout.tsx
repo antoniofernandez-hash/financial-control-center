@@ -5,6 +5,7 @@ import './mobile-fix.css'
 import './valuation-status.css'
 import './wealth-management.css'
 import ValuationStatus from './valuation-status'
+import AppSectionNav from './app-section-nav'
 
 export const metadata: Metadata = {
   title: 'Financial Control Center',
@@ -29,5 +30,5 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es"><body><ValuationStatus />{children}</body></html>
+  return <html lang="es"><body><ValuationStatus />{children}<AppSectionNav /></body></html>
 }
