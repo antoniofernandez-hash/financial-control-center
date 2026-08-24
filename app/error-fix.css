@@ -1,0 +1,4 @@
+/* Oculta únicamente avisos transitorios de carga cuando la cartera ya tiene datos renderizados. */
+.appShell:has(.tableWrap tbody tr) > .error {
+  display: none;
+}
