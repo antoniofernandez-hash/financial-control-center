@@ -1,0 +1,65 @@
+@media (max-width: 1000px) {
+  .grid2,
+  .concentrationGrid,
+  .riskGrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100%;
+  }
+
+  .grid2 > *,
+  .concentrationGrid > *,
+  .riskGrid > *,
+  .panel,
+  .portfolioCards,
+  .miniCard,
+  .scenario,
+  .tableWrap {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .concentrationGrid {
+    gap: 14px;
+  }
+
+  .topLine {
+    min-width: 0;
+  }
+
+  .topLine b,
+  .topLine small,
+  .barLabel,
+  .barLabel span {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 600px) {
+  .appShell {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .panel {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .concentrationGrid,
+  .riskGrid,
+  .mcGrid,
+  .stressResult,
+  .portfolioCards {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .mcGrid {
+    gap: 8px;
+  }
+
+  .scenarioNumbers {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
