@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import './error-fix.css'
 import './mobile-fix.css'
+import ValuationStatus from './valuation-status'
 
 export const metadata: Metadata = {
   title: 'Financial Control Center',
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es"><body>{children}</body></html>
+  return <html lang="es"><body><ValuationStatus />{children}</body></html>
 }
