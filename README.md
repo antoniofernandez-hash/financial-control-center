@@ -21,3 +21,6 @@ Las lecturas están protegidas por las políticas RLS existentes y requieren usu
 - No usar nunca `service_role` en el frontend.
 - No se ha modificado la base de datos durante esta reconstrucción.
 - El dashboard toma la fecha más reciente de posiciones y la fecha más reciente de Lombard por cartera.
+
+## Despliegue
+Producción desplegada automáticamente desde la rama `main` de GitHub.
