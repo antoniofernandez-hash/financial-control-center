@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import './error-fix.css'
 
 export const metadata: Metadata = {
   title: 'Financial Control Center',
