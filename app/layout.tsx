@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import './error-fix.css'
 import './mobile-fix.css'
+import './valuation-status.css'
 import ValuationStatus from './valuation-status'
 
 export const metadata: Metadata = {
