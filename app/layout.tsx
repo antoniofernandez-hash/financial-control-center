@@ -4,6 +4,7 @@ import './error-fix.css'
 import './mobile-fix.css'
 import './valuation-status.css'
 import './wealth-management.css'
+import './risk-responsive.css'
 import ValuationStatus from './valuation-status'
 import AppSectionNav from './app-section-nav'
 
