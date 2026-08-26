@@ -23,8 +23,56 @@
 .importMessage{margin-top:9px;padding:8px 10px;border-radius:9px;background:#f5f1e9;font-size:12px}
 .recentImports{margin-top:10px;border-top:1px solid var(--line);padding-top:6px}.recentImports>div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:11px}.recentImports span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.recentImports b{font-size:9px;letter-spacing:.04em;color:#8a6500;white-space:nowrap}
 
+/* UX 2.0: clearer hierarchy and truly tabulated financial data */
+body{font-variant-numeric:tabular-nums}
+.appShell{max-width:1440px}
+.section{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 1px 2px rgba(16,24,32,.025)}
+.sectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.sectionHead h2{margin:0;font-size:20px;letter-spacing:-.02em}.sectionHead p{margin:4px 0 0;font-size:12px;line-height:1.45}
+.portfolioGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.portfolioCard{background:#fff;border:1px solid #ddd7ca;border-radius:14px;padding:15px;min-width:0}
+.cardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.cardTop h3{margin:0;font-size:16px;line-height:1.25}.cardTop small{display:block;margin-top:4px}.cardTop>span{font-size:11px;font-weight:800;color:var(--muted);background:#f5f3ee;border-radius:999px;padding:5px 8px}
+.miniKpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:4px}
+.miniKpis>div{display:grid;grid-template-columns:minmax(72px,.8fr) minmax(0,1.2fr);align-items:baseline;gap:8px;padding:10px 0;border-bottom:1px solid #eef0f2}
+.miniKpis>div:nth-child(odd){padding-right:12px;border-right:1px solid #eef0f2}.miniKpis>div:nth-child(even){padding-left:12px}
+.miniKpis span{font-size:10px;text-transform:uppercase;letter-spacing:.045em;color:var(--muted);white-space:nowrap}.miniKpis b{font-size:14px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;-webkit-overflow-scrolling:touch}
+.tableWrap table{min-width:720px;width:100%;border-collapse:separate;border-spacing:0}
+.tableWrap th{position:sticky;top:0;z-index:2;background:#f6f7f8;color:#59616d;font-size:10px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;white-space:nowrap}
+.tableWrap th,.tableWrap td{padding:11px 12px;border-bottom:1px solid #eceff1;vertical-align:middle}
+.tableWrap tbody tr:last-child td{border-bottom:0}.tableWrap tbody tr:hover{background:#fafbfc}
+.tableWrap th:not(:first-child),.tableWrap td:not(:first-child){text-align:right;white-space:nowrap}
+.tableWrap th:first-child,.tableWrap td:first-child{text-align:left;min-width:190px}
+.tableWrap td small{margin-top:3px;font-size:10px}
+
+.kpis article{box-shadow:0 1px 2px rgba(16,24,32,.025)}
+.kpis strong{letter-spacing:-.025em}
+.riskGrid>article,.scenarioGrid>article{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}
+
+@media(max-width:1000px){.portfolioGrid{grid-template-columns:1fr}.section{padding:15px}}
+
 @media(max-width:600px){
-  .documentImportWrap{right:10px;bottom:10px;width:calc(100vw - 20px)}
+  .appShell{padding:10px 10px 88px}
+  .topbar{margin:6px 2px 14px}.topbar h1{font-size:21px}.ghost{font-size:11px;padding:8px 9px}
+  .toolbar{border-radius:12px;padding:10px;margin-bottom:10px}
+  .kpis,.kpis.six{grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.kpis article{padding:12px;border-radius:12px}.kpis strong{font-size:17px}.kpis span{font-size:10px;margin-bottom:5px}.kpis small{font-size:9px}
+  .section{margin:10px 0;padding:12px;border-radius:14px}.sectionHead{display:block;margin-bottom:10px}.sectionHead h2{font-size:18px}.sectionHead p{font-size:11px}
+  .portfolioGrid{gap:9px}.portfolioCard{padding:12px;border-radius:12px}.cardTop h3{font-size:15px}
+  .miniKpis{grid-template-columns:1fr}.miniKpis>div,.miniKpis>div:nth-child(odd),.miniKpis>div:nth-child(even){padding:8px 0;border-right:0;border-bottom:1px solid #eef0f2;grid-template-columns:118px minmax(0,1fr)}.miniKpis>div:last-child{border-bottom:0}.miniKpis span{font-size:9px}.miniKpis b{font-size:13px;text-align:right}
+
+  /* Keep tables as tables on mobile: horizontal scroll instead of stacked cards */
+  .tableWrap{overflow-x:auto!important;overflow-y:hidden!important;width:100%;border-radius:10px}
+  .tableWrap table{display:table!important;width:100%!important;min-width:660px!important;font-size:11px!important}
+  .tableWrap thead{display:table-header-group!important}.tableWrap tbody{display:table-row-group!important}.tableWrap tr{display:table-row!important;width:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+  .tableWrap th,.tableWrap td{display:table-cell!important;width:auto!important;padding:9px 10px!important;border-bottom:1px solid #eceff1!important;text-align:right!important}
+  .tableWrap th:first-child,.tableWrap td:first-child{position:sticky;left:0;z-index:1;background:#fff;text-align:left!important;min-width:170px!important;max-width:220px}.tableWrap th:first-child{z-index:3;background:#f6f7f8}
+  .tableWrap td::before{content:none!important;display:none!important}
+  .tableWrap tbody tr:last-child td{border-bottom:0!important}
+  .tableWrap td b,.tableWrap td small{overflow-wrap:normal!important;word-break:normal!important}
+
+  .documentImportWrap{right:10px;bottom:78px;width:calc(100vw - 20px)}
   .documentImportCard{border-radius:15px;padding:13px}
   .documentImportActions{grid-template-columns:1fr}
   .uploadButton{width:100%}
