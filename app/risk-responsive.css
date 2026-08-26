@@ -1,0 +1,140 @@
+/* Responsive overrides for Lombard risk tables */
+@media (max-width: 700px) {
+  .appShell > .section:nth-of-type(6),
+  .appShell > .section:nth-of-type(7),
+  .appShell > .section:nth-of-type(8),
+  .appShell > .section:nth-of-type(9) {
+    overflow: visible !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .sectionHead,
+  .appShell > .section:nth-of-type(7) .sectionHead,
+  .appShell > .section:nth-of-type(8) .sectionHead,
+  .appShell > .section:nth-of-type(9) .sectionHead {
+    display: block !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .riskGrid,
+  .appShell > .section:nth-of-type(7) .riskGrid,
+  .appShell > .section:nth-of-type(9) .riskGrid {
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .riskGrid > article,
+  .appShell > .section:nth-of-type(7) .riskGrid > article,
+  .appShell > .section:nth-of-type(9) .riskGrid > article {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    gap: 6px 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: 8px !important;
+    padding: 11px 12px !important;
+    border: 1px solid #e2e5e8 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .riskGrid > article span,
+  .appShell > .section:nth-of-type(7) .riskGrid > article span,
+  .appShell > .section:nth-of-type(9) .riskGrid > article span {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .riskGrid > article strong,
+  .appShell > .section:nth-of-type(7) .riskGrid > article strong,
+  .appShell > .section:nth-of-type(9) .riskGrid > article strong {
+    text-align: right !important;
+    font-size: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .appShell > .section:nth-of-type(6) .riskGrid > article small {
+    grid-column: 1 / -1 !important;
+    text-align: left !important;
+  }
+
+  .appShell > .section:nth-of-type(7) .riskGrid > article::after,
+  .appShell > .section:nth-of-type(9) .riskGrid > article::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid {
+    display: block !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid > article {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: 8px !important;
+    padding: 12px !important;
+    border: 1px solid #e2e5e8 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid h3,
+  .appShell > .section:nth-of-type(8) .scenarioGrid p {
+    grid-column: 1 / -1 !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid p {
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid > article > div {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 8px !important;
+    align-items: baseline !important;
+    text-align: left !important;
+    border-top: 1px solid #eceff1 !important;
+    padding-top: 7px !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid > article > div:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid b {
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .appShell > .section:nth-of-type(7) .control,
+  .appShell > .section:nth-of-type(9) .mcControls {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 10px !important;
+  }
+
+  .appShell > .section:nth-of-type(9) .mcControls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .appShell > .section:nth-of-type(9) .mcControls label {
+    min-width: 0 !important;
+  }
+
+  .appShell > .section:nth-of-type(9) .mcControls select,
+  .appShell > .section:nth-of-type(9) .mcControls input {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
