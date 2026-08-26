@@ -53,6 +53,8 @@ export default function Home(){
   const [horizon,setHorizon]=useState(12)
   const [mcSeed,setMcSeed]=useState(20260824)
   const [shock,setShock]=useState(-20)
+  const [annualReturn,setAnnualReturn]=useState(4)
+  const [annualLombardDraw,setAnnualLombardDraw]=useState(100000)
   const [error,setError]=useState('')
   const [data,setData]=useState<{portfolios:Portfolio[],accounts:Account[],assets:Asset[],positions:Position[],facilities:Facility[],snapshots:Snapshot[]}>({portfolios:[],accounts:[],assets:[],positions:[],facilities:[],snapshots:[]})
 
@@ -84,6 +86,34 @@ export default function Home(){
 
   const classRows=useMemo(()=>{ const m=new Map<string,{value:number,lending:number}>(); positions.forEach(p=>{const c=assetMap[p.asset_id]?.asset_class||'Sin clasificar';const row=m.get(c)||{value:0,lending:0};row.value+=Number(p.market_value||0);row.lending+=Number(p.lending_value||0);m.set(c,row)}); return [...m.entries()].map(([name,v])=>({name,...v,weight:totalAssets?v.value/totalAssets:0})).sort((a,b)=>b.value-a.value) },[positions,assetMap,totalAssets])
   const topPositions=useMemo(()=>[...positions].sort((a,b)=>Number(b.market_value)-Number(a.market_value)).slice(0,5),[positions])
+
+  const lombardProjection=useMemo(()=>{
+    const points=[{year:0,assets:totalAssets,lending:lendingValue,debt,ltv}]
+    let projectedAssets=totalAssets, projectedLending=lendingValue, projectedDebt=debt
+    const growth=Math.max(0,1+annualReturn/100)
+    for(let year=1;year<=20;year++){
+      projectedAssets*=growth
+      projectedLending*=growth
+      projectedDebt+=Math.max(0,annualLombardDraw)
+      points.push({year,assets:projectedAssets,lending:projectedLending,debt:projectedDebt,ltv:projectedLending>0?projectedDebt/projectedLending:Infinity})
+    }
+    return {
+      points,
+      warningYear:points.find(p=>p.ltv>=warning)?.year??null,
+      marginYear:points.find(p=>p.ltv>=margin)?.year??null,
+      final:points[points.length-1],
+    }
+  },[totalAssets,lendingValue,debt,ltv,annualReturn,annualLombardDraw,warning,margin])
+
+  const projectionChart=useMemo(()=>{
+    const width=960,height=300,pad={left:58,right:20,top:22,bottom:38}
+    const finiteLtvs=lombardProjection.points.map(p=>p.ltv).filter(Number.isFinite)
+    const maxY=Math.max(margin*1.15,warning*1.15,...finiteLtvs.map(v=>v*1.08),.1)
+    const x=(year:number)=>pad.left+(year/20)*(width-pad.left-pad.right)
+    const y=(value:number)=>pad.top+(1-Math.min(value,maxY)/maxY)*(height-pad.top-pad.bottom)
+    const path=lombardProjection.points.map((p,i)=>`${i?'L':'M'} ${x(p.year).toFixed(1)} ${y(Number.isFinite(p.ltv)?p.ltv:maxY).toFixed(1)}`).join(' ')
+    return {width,height,pad,maxY,x,y,path}
+  },[lombardProjection,warning,margin])
 
   const fixedStress=useMemo(()=>{ const factor=1+shock/100; const stressedAssets=totalAssets*factor; const stressedLending=lendingValue*factor; const stressedLtv=stressedLending>0?debt/stressedLending:Infinity; return {assets:stressedAssets,lending:stressedLending,ltv:stressedLtv,net:stressedAssets-debt} },[shock,totalAssets,lendingValue,debt])
 
@@ -126,6 +156,34 @@ export default function Home(){
     <section className="section"><div className="sectionHead"><div><h2>Top posiciones</h2><p className="muted">Las cinco posiciones de mayor valor en la selección actual.</p></div></div><div className="tableWrap"><table><thead><tr><th>Activo</th><th>Clase</th><th>Valor</th><th>LTV aplicado</th><th>Fuente</th></tr></thead><tbody>{topPositions.map(p=>{const a=assetMap[p.asset_id];return <tr key={p.id}><td>{a?.name||p.asset_id}<small>{a?.isin||''}</small></td><td>{a?.asset_class||'—'}</td><td>{eur.format(Number(p.market_value))}</td><td>{p.applied_ltv==null?'—':pct(Number(p.applied_ltv))}</td><td>{p.source||'—'}</td></tr>})}</tbody></table></div></section>
 
     <section className="section"><div className="sectionHead"><div><h2>Carril de seguridad Lombard</h2><p className="muted">Cuánto puede caer el valor prestable antes de alcanzar los umbrales actuales.</p></div></div><div className="riskGrid"><article className="riskBox"><span>Caída hasta warning</span><strong>{pct(fallToWarning)}</strong><small>Umbral {pct(warning)}</small></article><article className="riskBox"><span>Caída hasta margin call</span><strong>{pct(fallToMargin)}</strong><small>Umbral {pct(margin)}</small></article><article className="riskBox"><span>Exceso de lending value</span><strong>{eur.format(Math.max(lendingValue-debt,0))}</strong><small>Sin aplicar haircuts adicionales</small></article></div></section>
+
+    <section className="section projectionSection">
+      <div className="sectionHead">
+        <div><h2>Proyección Lombard a 20 años</h2><p className="muted">Simula cómo evolucionan los margin calls con rendimiento compuesto y disposiciones anuales adicionales.</p></div>
+        <div className="projectionControls">
+          <label>Rendimiento anual <span className={annualReturn<0?'negativeInput':''}>{annualReturn>0?'+':''}{annualReturn}%</span><input aria-label="Rendimiento anual de la cartera" type="range" min="-20" max="20" step="0.5" value={annualReturn} onChange={e=>setAnnualReturn(Number(e.target.value))}/></label>
+          <label>Consumo Lombard anual <input aria-label="Consumo Lombard anual" className="moneyInput" type="number" min="0" step="25000" value={annualLombardDraw} onChange={e=>setAnnualLombardDraw(Math.max(0,Number(e.target.value)||0))}/></label>
+        </div>
+      </div>
+      <div className="projectionSummary">
+        <article className={lombardProjection.warningYear!==null?'warn':''}><span>Primer warning</span><strong>{lombardProjection.warningYear===null?'No llega':lombardProjection.warningYear===0?'Actual':`Año ${lombardProjection.warningYear}`}</strong></article>
+        <article className={lombardProjection.marginYear!==null?'danger':''}><span>Primer margin call</span><strong>{lombardProjection.marginYear===null?'No llega':lombardProjection.marginYear===0?'Actual':`Año ${lombardProjection.marginYear}`}</strong></article>
+        <article><span>LTV en año 20</span><strong>{Number.isFinite(lombardProjection.final.ltv)?pct(lombardProjection.final.ltv):'Sin garantía'}</strong></article>
+        <article><span>Deuda en año 20</span><strong>{eur.format(lombardProjection.final.debt)}</strong></article>
+      </div>
+      <div className="projectionChartWrap">
+        <svg className="projectionChart" viewBox={`0 0 ${projectionChart.width} ${projectionChart.height}`} role="img" aria-label="Proyección del LTV durante 20 años frente a warning y margin call">
+          {[0,.25,.5,.75,1].map(t=>{const value=projectionChart.maxY*t;const yy=projectionChart.y(value);return <g key={t}><line x1={projectionChart.pad.left} y1={yy} x2={projectionChart.width-projectionChart.pad.right} y2={yy} className="chartGrid"/><text x={projectionChart.pad.left-10} y={yy+4} textAnchor="end" className="chartAxis">{Math.round(value*100)}%</text></g>})}
+          {[0,5,10,15,20].map(year=><text key={year} x={projectionChart.x(year)} y={projectionChart.height-12} textAnchor="middle" className="chartAxis">Año {year}</text>)}
+          <line x1={projectionChart.pad.left} y1={projectionChart.y(warning)} x2={projectionChart.width-projectionChart.pad.right} y2={projectionChart.y(warning)} className="warningLine"/>
+          <line x1={projectionChart.pad.left} y1={projectionChart.y(margin)} x2={projectionChart.width-projectionChart.pad.right} y2={projectionChart.y(margin)} className="marginLine"/>
+          <path d={projectionChart.path} className="ltvLine"/>
+          {lombardProjection.points.map(p=><circle key={p.year} cx={projectionChart.x(p.year)} cy={projectionChart.y(Number.isFinite(p.ltv)?p.ltv:projectionChart.maxY)} r={p.year%5===0?4:2.2} className={p.ltv>=margin?'marginDot':p.ltv>=warning?'warningDot':'ltvDot'}><title>{`Año ${p.year}: LTV ${Number.isFinite(p.ltv)?pct(p.ltv):'sin garantía'}, deuda ${eur.format(p.debt)}`}</title></circle>)}
+        </svg>
+        <div className="chartLegend"><span className="legendLtv">LTV proyectado</span><span className="legendWarning">Warning {pct(warning)}</span><span className="legendMargin">Margin call {pct(margin)}</span></div>
+      </div>
+      <p className="projectionNote">Supuesto: el rendimiento se aplica una vez al año al valor de la cartera y al valor prestable, manteniendo constante el porcentaje prestable. El consumo se añade íntegramente a la deuda al cierre de cada año; no incluye intereses ni amortizaciones.</p>
+    </section>
 
     <section className="section"><div className="sectionHead"><div><h2>Stress test configurable</h2><p className="muted">Shock homogéneo sobre activos y lending value para una lectura conservadora rápida.</p></div><div className="control"><label>Caída <b>{shock}%</b></label><input type="range" min="-60" max="0" step="5" value={shock} onChange={e=>setShock(Number(e.target.value))}/></div></div><div className="riskGrid"><article><span>Activos estresados</span><strong>{eur.format(fixedStress.assets)}</strong></article><article><span>Neto estresado</span><strong>{eur.format(fixedStress.net)}</strong></article><article className={fixedStress.ltv>=margin?'danger':fixedStress.ltv>=warning?'warn':''}><span>LTV estresado</span><strong>{Number.isFinite(fixedStress.ltv)?pct(fixedStress.ltv):'—'}</strong></article></div></section>
 
