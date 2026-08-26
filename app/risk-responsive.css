@@ -65,6 +65,7 @@
     content: none !important;
   }
 
+  /* Historical scenarios: one metric per row to avoid overlapping amounts on iPhone */
   .appShell > .section:nth-of-type(8) .scenarioGrid {
     display: block !important;
     min-width: 0 !important;
@@ -74,45 +75,58 @@
   }
 
   .appShell > .section:nth-of-type(8) .scenarioGrid > article {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px 10px !important;
+    display: block !important;
     width: 100% !important;
     min-width: 0 !important;
-    margin-bottom: 8px !important;
-    padding: 12px !important;
+    margin-bottom: 10px !important;
+    padding: 13px 14px !important;
     border: 1px solid #e2e5e8 !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     background: #fff !important;
   }
 
-  .appShell > .section:nth-of-type(8) .scenarioGrid h3,
-  .appShell > .section:nth-of-type(8) .scenarioGrid p {
-    grid-column: 1 / -1 !important;
+  .appShell > .section:nth-of-type(8) .scenarioGrid h3 {
+    margin: 0 0 6px !important;
+    font-size: 15px !important;
   }
 
   .appShell > .section:nth-of-type(8) .scenarioGrid p {
+    margin: 0 0 8px !important;
     font-size: 10px !important;
     line-height: 1.35 !important;
   }
 
   .appShell > .section:nth-of-type(8) .scenarioGrid > article > div {
     display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    gap: 8px !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    gap: 12px !important;
     align-items: baseline !important;
-    text-align: left !important;
+    width: 100% !important;
+    min-width: 0 !important;
     border-top: 1px solid #eceff1 !important;
-    padding-top: 7px !important;
+    padding: 9px 0 !important;
+    background: transparent !important;
+    text-align: left !important;
   }
 
   .appShell > .section:nth-of-type(8) .scenarioGrid > article > div:last-child {
-    grid-column: 1 / -1 !important;
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .appShell > .section:nth-of-type(8) .scenarioGrid span {
+    min-width: 0 !important;
+    font-size: 9px !important;
+    white-space: normal !important;
   }
 
   .appShell > .section:nth-of-type(8) .scenarioGrid b {
+    max-width: 46vw !important;
     text-align: right !important;
     white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 13px !important;
   }
 
   .appShell > .section:nth-of-type(7) .control,
@@ -136,5 +150,9 @@
   .appShell > .section:nth-of-type(9) .mcControls input {
     width: 100% !important;
     max-width: none !important;
+  }
+
+  .appShell {
+    padding-bottom: 120px !important;
   }
 }
