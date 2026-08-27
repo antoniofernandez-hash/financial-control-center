@@ -10,10 +10,19 @@ type ImportRow = {
   created_at:string
 }
 
+function statusLabel(status:string){
+  if(status==='pending') return 'PENDIENTE DE CONCILIAR'
+  if(status==='requested') return 'CONCILIACIÓN SOLICITADA'
+  if(status==='reconciled') return 'CONCILIADO'
+  if(status==='rolled_back') return 'POSICIÓN ANTERIOR RESTAURADA'
+  return status.toUpperCase()
+}
+
 export default function DocumentImport(){
   const [session,setSession]=useState<any>(null)
   const [file,setFile]=useState<File|null>(null)
   const [busy,setBusy]=useState(false)
+  const [actionId,setActionId]=useState<string|null>(null)
   const [msg,setMsg]=useState('')
   const [recent,setRecent]=useState<ImportRow[]>([])
 
@@ -64,13 +73,37 @@ export default function DocumentImport(){
     finally{ setBusy(false) }
   }
 
+  async function requestReconciliation(id:string){
+    setActionId(id); setMsg('')
+    try{
+      const {error}=await supabase.rpc('request_julius_reconciliation',{p_document_import_id:id})
+      if(error) throw error
+      setMsg('Conciliación solicitada. Se ha guardado una copia de seguridad de la posición Julius actual.')
+      await loadRecent()
+    }catch(e:any){ setMsg(e?.message||'No se pudo solicitar la conciliación.') }
+    finally{ setActionId(null) }
+  }
+
+  async function rollback(id:string){
+    if(!window.confirm('Se restaurará la posición Julius anterior a esta conciliación. ¿Continuar?')) return
+    setActionId(id); setMsg('')
+    try{
+      const {error}=await supabase.rpc('restore_previous_julius_position',{p_document_import_id:id})
+      if(error) throw error
+      setMsg('Posición anterior restaurada correctamente.')
+      await loadRecent()
+      window.location.reload()
+    }catch(e:any){ setMsg(e?.message||'No se pudo restaurar la posición anterior.') }
+    finally{ setActionId(null) }
+  }
+
   if(!session) return null
   return <section className="documentImportWrap">
     <div className="documentImportCard">
       <div className="documentImportCopy">
         <div className="eyebrow">DOCUMENTACIÓN</div>
         <h2>Importar posición Julius</h2>
-        <p>Sube el PDF, Excel o CSV recibido del banco. Se guardará como documento privado y quedará pendiente de conciliación antes de convertirse en dato oficial.</p>
+        <p>Sube el PDF, Excel o CSV recibido del banco. Antes de conciliar se guarda una copia de seguridad para poder volver a la posición anterior.</p>
       </div>
       <div className="documentImportActions">
         <label className="filePicker" htmlFor="julius-file">{file?file.name:'Seleccionar archivo'}</label>
@@ -78,7 +111,13 @@ export default function DocumentImport(){
         <button className="uploadButton" disabled={!file||busy} onClick={upload}>{busy?'Subiendo…':'Subir a Julius'}</button>
       </div>
       {msg&&<div className="importMessage">{msg}</div>}
-      {recent.length>0&&<div className="recentImports">{recent.map(r=><div key={r.id}><span>{r.file_name}</span><b>{r.status==='pending'?'PENDIENTE DE CONCILIAR':r.status.toUpperCase()}</b></div>)}</div>}
+      {recent.length>0&&<div className="recentImports">{recent.map(r=><div className="importRow" key={r.id}>
+        <div className="importRowTop"><span>{r.file_name}</span><b>{statusLabel(r.status)}</b></div>
+        <div className="importRowActions">
+          {(r.status==='pending'||r.status==='rolled_back')&&<button className="reconcileButton" disabled={actionId===r.id} onClick={()=>requestReconciliation(r.id)}>{actionId===r.id?'Procesando…':'Conciliar ahora'}</button>}
+          {(r.status==='requested'||r.status==='reconciled')&&<button className="rollbackButton" disabled={actionId===r.id} onClick={()=>rollback(r.id)}>Volver a la posición anterior</button>}
+        </div>
+      </div>)}</div>}
     </div>
   </section>
 }
