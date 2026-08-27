@@ -33,6 +33,12 @@ function weightedThreshold(facilities:Facility[], key:'warning_ltv'|'margin_call
   if(!debt) return fallback
   return eligible.reduce((s,f)=>s+Number(f.principal||0)*Number(f[key]),0)/debt
 }
+function weightedInterestRatePct(facilities:Facility[]){
+  const eligible=facilities.filter(f=>Number(f.principal||0)>0 && f.interest_rate!=null)
+  const debt=eligible.reduce((s,f)=>s+Number(f.principal||0),0)
+  if(!debt) return 0
+  return eligible.reduce((s,f)=>s+Number(f.principal||0)*Number(f.interest_rate),0)/debt
+}
 function rng(seed:number){ let x=seed>>>0; return ()=>{ x=(1664525*x+1013904223)>>>0; return x/4294967296 } }
 function normal(r:()=>number){ const u=Math.max(r(),1e-12), v=Math.max(r(),1e-12); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v) }
 
@@ -81,6 +87,8 @@ export default function Home(){
   const ltv=lendingValue>0?debt/lendingValue:0
   const warning=weightedThreshold(facilities,'warning_ltv',0.65)
   const margin=weightedThreshold(facilities,'margin_call_ltv',0.75)
+  const lombardInterestRatePct=weightedInterestRatePct(facilities)
+  const lombardInterestRate=lombardInterestRatePct/100
   const fallToWarning=lendingValue>0?clamp(1-debt/(warning*lendingValue)):0
   const fallToMargin=lendingValue>0?clamp(1-debt/(margin*lendingValue)):0
 
@@ -94,7 +102,7 @@ export default function Home(){
     for(let year=1;year<=20;year++){
       projectedAssets*=growth
       projectedLending*=growth
-      projectedDebt+=Math.max(0,annualLombardDraw)
+      projectedDebt=projectedDebt*(1+lombardInterestRate)+Math.max(0,annualLombardDraw)
       points.push({year,assets:projectedAssets,lending:projectedLending,debt:projectedDebt,ltv:projectedLending>0?projectedDebt/projectedLending:Infinity})
     }
     return {
@@ -103,7 +111,7 @@ export default function Home(){
       marginYear:points.find(p=>p.ltv>=margin)?.year??null,
       final:points[points.length-1],
     }
-  },[totalAssets,lendingValue,debt,ltv,annualReturn,annualLombardDraw,warning,margin])
+  },[totalAssets,lendingValue,debt,ltv,annualReturn,annualLombardDraw,lombardInterestRate,warning,margin])
 
   const projectionChart=useMemo(()=>{
     const width=960,height=300,pad={left:58,right:20,top:22,bottom:38}
@@ -159,10 +167,11 @@ export default function Home(){
 
     <section className="section projectionSection">
       <div className="sectionHead">
-        <div><h2>Proyección Lombard a 20 años</h2><p className="muted">Simula cómo evolucionan los margin calls con rendimiento compuesto y disposiciones anuales adicionales.</p></div>
+        <div><h2>Proyección Lombard a 20 años</h2><p className="muted">Simula cómo evolucionan los margin calls con rendimiento compuesto, interés Lombard compuesto y disposiciones anuales adicionales.</p></div>
         <div className="projectionControls">
           <label>Rendimiento anual <span className={annualReturn<0?'negativeInput':''}>{annualReturn>0?'+':''}{annualReturn}%</span><input aria-label="Rendimiento anual de la cartera" type="range" min="-20" max="20" step="0.5" value={annualReturn} onChange={e=>setAnnualReturn(Number(e.target.value))}/></label>
           <label>Consumo Lombard anual <input aria-label="Consumo Lombard anual" className="moneyInput" type="number" min="0" step="25000" value={annualLombardDraw} onChange={e=>setAnnualLombardDraw(Math.max(0,Number(e.target.value)||0))}/></label>
+          <label>Interés Lombard capitalizado <span>{lombardInterestRatePct.toFixed(3)}%</span></label>
         </div>
       </div>
       <div className="projectionSummary">
@@ -182,7 +191,7 @@ export default function Home(){
         </svg>
         <div className="chartLegend"><span className="legendLtv">LTV proyectado</span><span className="legendWarning">Warning {pct(warning)}</span><span className="legendMargin">Margin call {pct(margin)}</span></div>
       </div>
-      <p className="projectionNote">Supuesto: el rendimiento se aplica una vez al año al valor de la cartera y al valor prestable, manteniendo constante el porcentaje prestable. El consumo se añade íntegramente a la deuda al cierre de cada año; no incluye intereses ni amortizaciones.</p>
+      <p className="projectionNote">Supuesto: el rendimiento se aplica una vez al año al valor de la cartera y al valor prestable, manteniendo constante el porcentaje prestable. La deuda capitaliza anualmente el tipo Lombard vigente de la selección ({lombardInterestRatePct.toFixed(3)}%, media ponderada por principal cuando hay varias líneas) y los intereses no se pagan, por lo que pasan a generar nuevos intereses. El consumo Lombard se añade al cierre de cada año y empieza a devengar en el año siguiente; no se contemplan amortizaciones.</p>
     </section>
 
     <section className="section"><div className="sectionHead"><div><h2>Stress test configurable</h2><p className="muted">Shock homogéneo sobre activos y lending value para una lectura conservadora rápida.</p></div><div className="control"><label>Caída <b>{shock}%</b></label><input type="range" min="-60" max="0" step="5" value={shock} onChange={e=>setShock(Number(e.target.value))}/></div></div><div className="riskGrid"><article><span>Activos estresados</span><strong>{eur.format(fixedStress.assets)}</strong></article><article><span>Neto estresado</span><strong>{eur.format(fixedStress.net)}</strong></article><article className={fixedStress.ltv>=margin?'danger':fixedStress.ltv>=warning?'warn':''}><span>LTV estresado</span><strong>{Number.isFinite(fixedStress.ltv)?pct(fixedStress.ltv):'—'}</strong></article></div></section>
