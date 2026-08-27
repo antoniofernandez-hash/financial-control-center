@@ -179,6 +179,7 @@ export default function Home(){
         <article className={lombardProjection.marginYear!==null?'danger':''}><span>Primer margin call</span><strong>{lombardProjection.marginYear===null?'No llega':lombardProjection.marginYear===0?'Actual':`Año ${lombardProjection.marginYear}`}</strong></article>
         <article><span>LTV en año 20</span><strong>{Number.isFinite(lombardProjection.final.ltv)?pct(lombardProjection.final.ltv):'Sin garantía'}</strong></article>
         <article><span>Deuda en año 20</span><strong>{eur.format(lombardProjection.final.debt)}</strong></article>
+        <article><span>Capital en año 20</span><strong>{eur.format(lombardProjection.final.assets)}</strong></article>
       </div>
       <div className="projectionChartWrap">
         <svg className="projectionChart" viewBox={`0 0 ${projectionChart.width} ${projectionChart.height}`} role="img" aria-label="Proyección del LTV durante 20 años frente a warning y margin call">
