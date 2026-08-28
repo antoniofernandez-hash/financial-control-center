@@ -16,7 +16,9 @@ type AccountRow = { id:string; account_name:string }
 function statusLabel(status:string){
   if(status==='pending') return 'PENDIENTE DE CONCILIAR'
   if(status==='requested') return 'CONCILIACIÓN SOLICITADA'
+  if(status==='processing') return 'CONCILIANDO…'
   if(status==='reconciled') return 'CONCILIADO'
+  if(status==='error') return 'ERROR DE CONCILIACIÓN'
   if(status==='rolled_back') return 'POSICIÓN ANTERIOR RESTAURADA'
   return status.toUpperCase()
 }
@@ -53,6 +55,14 @@ export default function DocumentImport(){
     const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s); if(s) loadData(); else {setRecent([]);setAccounts([])}})
     return ()=>subscription.unsubscribe()
   },[])
+
+  useEffect(()=>{
+    if(!session) return
+    const active=recent.some(r=>r.status==='requested'||r.status==='processing')
+    if(!active) return
+    const timer=window.setInterval(()=>{loadData()},1500)
+    return ()=>window.clearInterval(timer)
+  },[session,recent])
 
   function choose(e:ChangeEvent<HTMLInputElement>){
     setMsg('')
@@ -105,7 +115,7 @@ export default function DocumentImport(){
       const {error}=await supabase.rpc('request_julius_reconciliation',{p_document_import_id:id,p_account_ids:ids})
       if(error) throw error
       const names=accounts.filter(a=>ids.includes(a.id)).map(a=>a.account_name).join(', ')
-      setMsg(`Conciliación solicitada para: ${names}. Se ha guardado una copia de seguridad solo de esas cuentas.`)
+      setMsg(`Conciliación automática iniciada para: ${names}. La pantalla se actualizará sola cuando termine.`)
       await loadData()
     }catch(e:any){ setMsg(e?.message||'No se pudo solicitar la conciliación.') }
     finally{ setActionId(null) }
@@ -140,17 +150,17 @@ export default function DocumentImport(){
       {msg&&<div className="importMessage">{msg}</div>}
       {recent.length>0&&<div className="recentImports">{recent.map(r=>{
         const ids=selectedAccounts[r.id]||[]
-        const locked=r.status==='requested'||r.status==='reconciled'
+        const locked=['requested','processing','reconciled'].includes(r.status)
         return <div className="importRow" key={r.id}>
           <div className="importRowTop"><span>{r.file_name}</span><b>{statusLabel(r.status)}</b></div>
-          {(r.status==='pending'||r.status==='rolled_back')&&<div className="accountScope">
+          {(r.status==='pending'||r.status==='rolled_back'||r.status==='error')&&<div className="accountScope">
             <span className="accountScopeTitle">Cuentas incluidas en este archivo</span>
             <div className="accountChoices">{accounts.map(a=><label key={a.id}><input type="checkbox" checked={ids.includes(a.id)} disabled={locked} onChange={()=>toggleAccount(r.id,a.id)}/><span>{a.account_name}</span></label>)}</div>
             <button className="selectAllAccounts" onClick={()=>setSelectedAccounts(prev=>({...prev,[r.id]:accounts.map(a=>a.id)}))}>Seleccionar todas</button>
           </div>}
           <div className="importRowActions">
-            {(r.status==='pending'||r.status==='rolled_back')&&<button className="reconcileButton" disabled={actionId===r.id||!ids.length} onClick={()=>requestReconciliation(r.id)}>{actionId===r.id?'Procesando…':`Conciliar ${ids.length||''} cuenta${ids.length===1?'':'s'}`}</button>}
-            {(r.status==='requested'||r.status==='reconciled')&&<button className="rollbackButton" disabled={actionId===r.id} onClick={()=>rollback(r.id)}>Volver a la posición anterior</button>}
+            {(r.status==='pending'||r.status==='rolled_back'||r.status==='error')&&<button className="reconcileButton" disabled={actionId===r.id||!ids.length} onClick={()=>requestReconciliation(r.id)}>{actionId===r.id?'Procesando…':r.status==='error'?'Reintentar conciliación':`Conciliar ${ids.length||''} cuenta${ids.length===1?'':'s'}`}</button>}
+            {(r.status==='requested'||r.status==='processing'||r.status==='reconciled')&&<button className="rollbackButton" disabled={actionId===r.id||r.status==='processing'} onClick={()=>rollback(r.id)}>Volver a la posición anterior</button>}
           </div>
         </div>})}</div>}
     </div>
