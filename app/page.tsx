@@ -65,14 +65,28 @@ export default function Home(){
   const [data,setData]=useState<{portfolios:Portfolio[],accounts:Account[],assets:Asset[],positions:Position[],facilities:Facility[],snapshots:Snapshot[]}>({portfolios:[],accounts:[],assets:[],positions:[],facilities:[],snapshots:[]})
 
   useEffect(()=>{ supabase.auth.getSession().then(({data})=>{setSession(data.session);setReady(true)}); const {data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s)); return ()=>subscription.unsubscribe() },[])
-  useEffect(()=>{ if(!session)return; (async()=>{ const [p,a,as,pos,l,s]=await Promise.all([
-    supabase.from('portfolios').select('id,name,entity_type,base_currency').order('name'),
-    supabase.from('accounts').select('id,portfolio_id,institution,account_name,account_ref,currency'),
-    supabase.from('assets').select('id,name,isin,asset_class,region,currency,default_ltv'),
-    supabase.from('positions').select('id,account_id,asset_id,as_of_date,market_value,cost_basis,lending_value,applied_ltv,source,source_document').order('as_of_date',{ascending:false}),
-    supabase.from('lombard_facilities').select('id,portfolio_id,facility_name,institution,principal,credit_limit,interest_rate,warning_ltv,margin_call_ltv,as_of_date').order('as_of_date',{ascending:false}),
-    supabase.from('portfolio_snapshots').select('id,portfolio_id,as_of_date,gross_assets,total_debt,net_worth,lending_value,ltv_to_lending_value').order('as_of_date',{ascending:false}),
-  ]); const anyError=[p,a,as,pos,l,s].find(x=>x.error)?.error; if(anyError){setError(anyError.message);return} setData({portfolios:p.data||[],accounts:a.data||[],assets:as.data||[],positions:pos.data||[],facilities:l.data||[],snapshots:s.data||[]}) })() },[session])
+  useEffect(()=>{ if(!session)return; let cancelled=false; (async()=>{
+    const fetchData=()=>Promise.all([
+      supabase.from('portfolios').select('id,name,entity_type,base_currency').order('name'),
+      supabase.from('accounts').select('id,portfolio_id,institution,account_name,account_ref,currency'),
+      supabase.from('assets').select('id,name,isin,asset_class,region,currency,default_ltv'),
+      supabase.from('positions').select('id,account_id,asset_id,as_of_date,market_value,cost_basis,lending_value,applied_ltv,source,source_document').order('as_of_date',{ascending:false}),
+      supabase.from('lombard_facilities').select('id,portfolio_id,facility_name,institution,principal,credit_limit,interest_rate,warning_ltv,margin_call_ltv,as_of_date').order('as_of_date',{ascending:false}),
+      supabase.from('portfolio_snapshots').select('id,portfolio_id,as_of_date,gross_assets,total_debt,net_worth,lending_value,ltv_to_lending_value').order('as_of_date',{ascending:false}),
+    ])
+    let results=await fetchData()
+    let anyError=results.find(x=>x.error)?.error
+    if(anyError && /jwt.*future|issued at.*future/i.test(anyError.message)){
+      const {error:refreshError}=await supabase.auth.refreshSession()
+      if(!refreshError) results=await fetchData()
+      anyError=results.find(x=>x.error)?.error
+    }
+    if(cancelled) return
+    if(anyError){setError('No se han podido actualizar los datos. Vuelve a intentarlo en unos segundos.');return}
+    const [p,a,as,pos,l,s]=results
+    setError('')
+    setData({portfolios:p.data||[],accounts:a.data||[],assets:as.data||[],positions:pos.data||[],facilities:l.data||[],snapshots:s.data||[]})
+  })(); return()=>{cancelled=true} },[session])
 
   const accountToPortfolio=useMemo(()=>Object.fromEntries(data.accounts.map(a=>[a.id,a.portfolio_id])),[data.accounts])
   const assetMap=useMemo(()=>Object.fromEntries(data.assets.map(a=>[a.id,a])),[data.assets])
