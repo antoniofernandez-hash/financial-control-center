@@ -1,0 +1,42 @@
+.appSectionNav {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 50;
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  background: rgba(6,21,37,.94);
+  box-shadow: 0 12px 35px rgba(0,0,0,.28);
+  backdrop-filter: blur(12px);
+}
+
+.appSectionNav a {
+  padding: 10px 12px;
+  border-radius: 11px;
+  color: #e5edf5;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.appSectionNav a.active { background: #5eead4; color: #061525; }
+
+/* Leave room for the fixed navigation on every authenticated page. */
+.appShell { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+
+@media (max-width: 600px) {
+  .appSectionNav {
+    right: 12px;
+    left: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .appSectionNav a { text-align: center; }
+  .appShell { padding-bottom: calc(116px + env(safe-area-inset-bottom)) !important; }
+}
